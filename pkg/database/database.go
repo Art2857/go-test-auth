@@ -3,20 +3,18 @@ package database
 import (
 	"context"
 	"log"
-	"os"
 
 	"github.com/jackc/pgx/v4"
 )
 
 var DB *pgx.Conn
 
-func InitDB(connStr string) {
+func InitDB(connectString string) {
 	var err error
 
-	DB, err = pgx.Connect(context.Background(), connStr)
+	DB, err = pgx.Connect(context.Background(), connectString)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
-		os.Exit(1)
 	}
 
 	log.Println("Connected to the database.")

@@ -2,9 +2,7 @@ package token
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"log"
 	"time"
@@ -14,7 +12,15 @@ import (
 
 	"auth-service/pkg/config"
 	"auth-service/pkg/mail"
+	"auth-service/pkg/utils"
 )
+
+// TokenPair содержит пару токенов
+// @Description Структура для пару токенов access и refresh
+type TokenPair struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
 
 var jwtSecret = []byte(config.Env.JWT_SECRET)
 
@@ -95,12 +101,11 @@ func hashRefreshTokenToJWT(refreshToken string) (string, error) {
 
 // Хеширование refresh токена для хранения в базе данных
 func hashRefreshTokenToDatabase(refreshToken string) string {
-	hash := sha256.Sum256([]byte(refreshToken + "refresh token database salt"))
-	return hex.EncodeToString(hash[:])
+	return utils.Sum256(refreshToken + "refresh token database salt")
 }
 
 // Функция для генерации пары Access и Refresh токенов
-func GenerateTokenPair(userID, ip string) (map[string]string, error) {
+func GenerateTokenPair(userID, ip string) (*TokenPair, error) {
 	refreshToken, err := generateRefreshToken() // Генерируем refresh token
 	if err != nil {
 		log.Print(err)
@@ -123,16 +128,16 @@ func GenerateTokenPair(userID, ip string) (map[string]string, error) {
 	}
 
 	// Отправляем токены клиенту
-	tokenPair := map[string]string{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+	tokenPair := &TokenPair{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}
 
 	return tokenPair, nil
 }
 
 // Функция для обновления пары Access и Refresh токенов
-func RefreshTokenPair(accessToken, refreshToken, ip string) (map[string]string, error) {
+func RefreshTokenPair(accessToken, refreshToken, ip string) (*TokenPair, error) {
 	claims, err := VerifyAccessToken(accessToken, true)
 	if err != nil {
 		log.Print(err)

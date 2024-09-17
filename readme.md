@@ -29,6 +29,11 @@ Payload токенов должен содержать сведения об ip 
 go mod download
 ```
 
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+swag init
+```
+
 **Запуск**
 
 ```bash
@@ -37,6 +42,10 @@ go run auth-service
 ```
 
 **Роутинг**
+
+Роут документации:
+
+http://localhost:8000/docs/
 
 Роут Аутентификации:
 

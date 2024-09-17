@@ -1,0 +1,81 @@
+definitions:
+  token.TokenPair:
+    description: Структура для пары токенов (access и refresh).
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /token/login:
+    post:
+      consumes:
+      - application/json
+      description: Генерирует access и refresh токены для пользователя по его ID.
+      parameters:
+      - description: Тело запроса с user_id
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            user_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пара токенов
+          schema:
+            $ref: '#/definitions/token.TokenPair'
+        "400":
+          description: Неверный запрос
+          schema:
+            type: string
+        "500":
+          description: Ошибка генерации токенов
+          schema:
+            type: string
+      summary: Генерация пары токенов
+      tags:
+      - Auth
+  /token/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Обновляет access и refresh токены, используя действующую refresh-токен.
+      parameters:
+      - description: Тело запроса с токенами
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            access_token:
+              type: string
+            refresh_token:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленная пара токенов
+          schema:
+            $ref: '#/definitions/token.TokenPair'
+        "400":
+          description: Неверный запрос
+          schema:
+            type: string
+        "500":
+          description: Ошибка обновления токенов
+          schema:
+            type: string
+      summary: Обновление пары токенов
+      tags:
+      - Auth
+swagger: "2.0"
