@@ -95,7 +95,7 @@ func hashRefreshTokenToJWT(refreshToken string) (string, error) {
 
 // Хеширование refresh токена для хранения в базе данных
 func hashRefreshTokenToDatabase(refreshToken string) string {
-	hash := sha256.Sum256([]byte(refreshToken))
+	hash := sha256.Sum256([]byte(refreshToken + "refresh token database salt"))
 	return hex.EncodeToString(hash[:])
 }
 
