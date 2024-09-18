@@ -75,6 +75,23 @@ func VerifyAccessToken(token string, ignoreExpiration bool) (*Claims, error) {
 	return nil, err
 }
 
+func VerifyTokenPair(accessToken, refreshToken string) (*Claims, error) {
+	claims, err := VerifyAccessToken(accessToken, true)
+	if err != nil {
+		log.Print(err)
+		return nil, err
+	}
+
+	// Сверяем что refresh связан с access токеном
+	err = bcrypt.CompareHashAndPassword([]byte(claims.RefreshTokenHash), []byte(refreshToken))
+	if err != nil {
+		log.Print(err)
+		return nil, err
+	}
+
+	return claims, nil
+}
+
 // Функция для генерации случайного refresh токена в формате base64
 func generateRefreshToken() (string, error) {
 	tokenBytes := make([]byte, 32)
@@ -138,14 +155,7 @@ func GenerateTokenPair(userID, ip string) (*TokenPair, error) {
 
 // Функция для обновления пары Access и Refresh токенов
 func RefreshTokenPair(accessToken, refreshToken, ip string) (*TokenPair, error) {
-	claims, err := VerifyAccessToken(accessToken, true)
-	if err != nil {
-		log.Print(err)
-		return nil, err
-	}
-
-	// Сверяем что refresh связан с access токеном
-	err = bcrypt.CompareHashAndPassword([]byte(claims.RefreshTokenHash), []byte(refreshToken))
+	claims, err := VerifyTokenPair(accessToken, refreshToken)
 	if err != nil {
 		log.Print(err)
 		return nil, err
@@ -168,10 +178,14 @@ func RefreshTokenPair(accessToken, refreshToken, ip string) (*TokenPair, error) 
 		return nil, errors.New("invalid IP")
 	}
 
-	_, err = RefreshTokenRemove(refreshTokenHashDatabase)
+	exists, err := RefreshTokenRemove(refreshTokenHashDatabase)
 	if err != nil {
 		log.Print(err)
 		return nil, err
+	}
+
+	if !exists {
+		return nil, errors.New("refresh token not found")
 	}
 
 	tokenPair, err := GenerateTokenPair(claims.UserID, ip)
