@@ -10,9 +10,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 
-	"auth-service/pkg/config"
-	"auth-service/pkg/mail"
-	"auth-service/pkg/utils"
+	"auth/pkg/config"
+	"auth/pkg/mail"
+	"auth/pkg/utils"
 )
 
 type TokenService struct {

@@ -38,7 +38,7 @@ swag init
 
 ```bash
 docker-compose -f ./docker-compose.database.yml up -d
-go run auth-service
+go run auth
 ```
 
 **Роутинг**

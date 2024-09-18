@@ -1,7 +1,7 @@
 package token
 
 import (
-	"auth-service/pkg/utils"
+	"auth/pkg/utils"
 	"net/http"
 
 	"github.com/labstack/echo/v4"

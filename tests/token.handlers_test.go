@@ -1,10 +1,10 @@
 package token_test
 
 import (
-	"auth-service/pkg/config"
-	"auth-service/pkg/database"
-	"auth-service/pkg/mail"
-	"auth-service/pkg/token"
+	"auth/pkg/config"
+	"auth/pkg/database"
+	"auth/pkg/mail"
+	"auth/pkg/token"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
@@ -70,7 +70,6 @@ func TestHandlerGenerateTokenPair(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
-	// Execute request
 	e.ServeHTTP(rec, req)
 
 	// Assert results
@@ -119,10 +118,8 @@ func TestHandlerGenerateTokenPair(t *testing.T) {
 // 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 // 	rec := httptest.NewRecorder()
 
-// 	// Execute request
 // 	e.ServeHTTP(rec, req)
 
-// 	// Assert results
 // 	assert.Equal(t, http.StatusOK, rec.Code)
 
 // 	var tokenPair token.TokenPair

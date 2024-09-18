@@ -1,17 +1,17 @@
 package main
 
 import (
-	"auth-service/pkg/config"
-	"auth-service/pkg/database"
-	"auth-service/pkg/mail"
-	"auth-service/pkg/token"
+	"auth/pkg/config"
+	"auth/pkg/database"
+	"auth/pkg/mail"
+	"auth/pkg/token"
 	"log"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 
-	_ "auth-service/docs"
+	_ "auth/docs"
 )
 
 func main() {

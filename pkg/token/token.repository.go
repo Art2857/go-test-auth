@@ -1,7 +1,7 @@
 package token
 
 import (
-	"auth-service/pkg/database/models"
+	"auth/pkg/database/models"
 	"errors"
 
 	"gorm.io/gorm"

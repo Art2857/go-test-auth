@@ -1,7 +1,7 @@
 package database
 
 import (
-	"auth-service/pkg/database/models"
+	"auth/pkg/database/models"
 	"log"
 
 	"gorm.io/driver/postgres"
