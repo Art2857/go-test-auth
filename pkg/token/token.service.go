@@ -15,6 +15,18 @@ import (
 	"auth-service/pkg/utils"
 )
 
+type TokenService struct {
+	TokenRepository *TokenRepository
+	MailService     *mail.MailService
+}
+
+func NewService(tokenRepository *TokenRepository, mailService *mail.MailService) *TokenService {
+	return &TokenService{
+		TokenRepository: tokenRepository,
+		MailService:     mailService,
+	}
+}
+
 // TokenPair содержит пару токенов
 // @Description Структура для пару токенов access и refresh
 type TokenPair struct {
@@ -34,11 +46,11 @@ type Claims struct {
 }
 
 // Функция для генерации Access токена (JWT)
-func signAccessToken(userID, ip, refreshToken string) (string, error) {
+func (s *TokenService) signAccessToken(userID, ip, refreshToken string) (string, error) {
 	expirationTime := time.Now().Add(15 * time.Minute)
 
 	// Хешируем refresh токен для связки с access токеном
-	refreshTokenHash, err := hashRefreshTokenToJWT(refreshToken)
+	refreshTokenHash, err := s.hashRefreshTokenToJWT(refreshToken)
 	if err != nil {
 		log.Print(err)
 		return "", err
@@ -59,7 +71,7 @@ func signAccessToken(userID, ip, refreshToken string) (string, error) {
 }
 
 // Функция для верификации Access токена
-func VerifyAccessToken(token string, ignoreExpiration bool) (*Claims, error) {
+func (s *TokenService) VerifyAccessToken(token string, ignoreExpiration bool) (*Claims, error) {
 	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
@@ -75,8 +87,8 @@ func VerifyAccessToken(token string, ignoreExpiration bool) (*Claims, error) {
 	return nil, err
 }
 
-func VerifyTokenPair(accessToken, refreshToken string) (*Claims, error) {
-	claims, err := VerifyAccessToken(accessToken, true)
+func (s *TokenService) VerifyTokenPair(accessToken, refreshToken string) (*Claims, error) {
+	claims, err := s.VerifyAccessToken(accessToken, true)
 	if err != nil {
 		log.Print(err)
 		return nil, err
@@ -93,7 +105,7 @@ func VerifyTokenPair(accessToken, refreshToken string) (*Claims, error) {
 }
 
 // Функция для генерации случайного refresh токена в формате base64
-func generateRefreshToken() (string, error) {
+func (s *TokenService) generateRefreshToken() (string, error) {
 	tokenBytes := make([]byte, 32)
 
 	_, err := rand.Read(tokenBytes)
@@ -106,7 +118,7 @@ func generateRefreshToken() (string, error) {
 }
 
 // Хеширование refresh токена для связки с access токеном
-func hashRefreshTokenToJWT(refreshToken string) (string, error) {
+func (s *TokenService) hashRefreshTokenToJWT(refreshToken string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(refreshToken), bcrypt.DefaultCost)
 	if err != nil {
 		log.Print(err)
@@ -117,28 +129,28 @@ func hashRefreshTokenToJWT(refreshToken string) (string, error) {
 }
 
 // Хеширование refresh токена для хранения в базе данных
-func hashRefreshTokenToDatabase(refreshToken string) string {
+func (s *TokenService) hashRefreshTokenToDatabase(refreshToken string) string {
 	return utils.Sum256(refreshToken + "refresh token database salt")
 }
 
 // Функция для генерации пары Access и Refresh токенов
-func GenerateTokenPair(userID, ip string) (*TokenPair, error) {
-	refreshToken, err := generateRefreshToken() // Генерируем refresh token
+func (s *TokenService) GenerateTokenPair(userID, ip string) (*TokenPair, error) {
+	refreshToken, err := s.generateRefreshToken() // Генерируем refresh token
 	if err != nil {
 		log.Print(err)
 		return nil, err
 	}
 
-	accessToken, err := signAccessToken(userID, ip, refreshToken) // Генерируем access token с идентификатором пользователя и ip-адресом
+	accessToken, err := s.signAccessToken(userID, ip, refreshToken) // Генерируем access token с идентификатором пользователя и ip-адресом
 	if err != nil {
 		log.Print(err)
 		return nil, errors.New("Error generating access token: " + err.Error())
 	}
 
-	refreshTokenHash := hashRefreshTokenToDatabase(refreshToken) // Хешируем refresh token
+	refreshTokenHash := s.hashRefreshTokenToDatabase(refreshToken) // Хешируем refresh token
 
 	// Сохранение refresh токена в базу
-	_, err = RefreshTokenCreate(refreshTokenHash, ip)
+	_, err = s.TokenRepository.RefreshTokenCreate(refreshTokenHash, ip)
 	if err != nil {
 		log.Print(err)
 		return nil, err
@@ -154,17 +166,17 @@ func GenerateTokenPair(userID, ip string) (*TokenPair, error) {
 }
 
 // Функция для обновления пары Access и Refresh токенов
-func RefreshTokenPair(accessToken, refreshToken, ip string) (*TokenPair, error) {
-	claims, err := VerifyTokenPair(accessToken, refreshToken)
+func (s *TokenService) RefreshTokenPair(accessToken, refreshToken, ip string) (*TokenPair, error) {
+	claims, err := s.VerifyTokenPair(accessToken, refreshToken)
 	if err != nil {
 		log.Print(err)
 		return nil, err
 	}
 
-	refreshTokenHashDatabase := hashRefreshTokenToDatabase(refreshToken)
+	refreshTokenHashDatabase := s.hashRefreshTokenToDatabase(refreshToken)
 
 	// Подбираем ip, который был при аутентификации
-	beforeIP, err := RefreshTokenGetIP(refreshTokenHashDatabase)
+	beforeIP, err := s.TokenRepository.RefreshTokenGetIP(refreshTokenHashDatabase)
 	if err != nil {
 		log.Print(err)
 		return nil, err
@@ -173,12 +185,12 @@ func RefreshTokenPair(accessToken, refreshToken, ip string) (*TokenPair, error) 
 	// Если IP-адрес пользователя изменился, то отправляем предупреждение на почту (моковые данные)
 	if ip != beforeIP {
 		log.Print(err)
-		mail.SendEmail("mock@ya.ru", "Invalid IP", "Warning: Invalid IP")
+		s.MailService.SendEmail("mock@ya.ru", "Invalid IP", "Warning: Invalid IP")
 
 		return nil, errors.New("invalid IP")
 	}
 
-	exists, err := RefreshTokenRemove(refreshTokenHashDatabase)
+	exists, err := s.TokenRepository.RefreshTokenRemove(refreshTokenHashDatabase)
 	if err != nil {
 		log.Print(err)
 		return nil, err
@@ -188,7 +200,7 @@ func RefreshTokenPair(accessToken, refreshToken, ip string) (*TokenPair, error) 
 		return nil, errors.New("refresh token not found")
 	}
 
-	tokenPair, err := GenerateTokenPair(claims.UserID, ip)
+	tokenPair, err := s.GenerateTokenPair(claims.UserID, ip)
 	if err != nil {
 		log.Print(err)
 		return nil, err

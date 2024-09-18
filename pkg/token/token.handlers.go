@@ -7,12 +7,20 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func InitHandlers(e *echo.Echo) *echo.Group {
+type TokenHandlers struct {
+	TokenService *TokenService
+}
+
+func NewHanders(tokenService *TokenService) *TokenHandlers {
+	return &TokenHandlers{TokenService: tokenService}
+}
+
+func (h *TokenHandlers) InitHandlers(e *echo.Echo) *echo.Group {
 
 	tokenGroup := e.Group("/token")
 	{
-		tokenGroup.POST("/login", HandlerGenerateTokenPair)
-		tokenGroup.POST("/refresh", HandlerRefreshTokenPair)
+		tokenGroup.POST("/login", h.HandlerGenerateTokenPair)
+		tokenGroup.POST("/refresh", h.HandlerRefreshTokenPair)
 	}
 
 	return tokenGroup
@@ -29,7 +37,7 @@ func InitHandlers(e *echo.Echo) *echo.Group {
 // @Failure      400  {string}  string  "Неверный запрос"
 // @Failure      500  {string}  string  "Ошибка генерации токенов"
 // @Router       /token/login [post]
-func HandlerGenerateTokenPair(c echo.Context) error {
+func (h *TokenHandlers) HandlerGenerateTokenPair(c echo.Context) error {
 	ip := c.RealIP()
 
 	var data struct {
@@ -44,7 +52,7 @@ func HandlerGenerateTokenPair(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid UUID format")
 	}
 
-	tokenPair, err := GenerateTokenPair(data.UserID, ip)
+	tokenPair, err := h.TokenService.GenerateTokenPair(data.UserID, ip)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Error generating token pair")
 	}
@@ -63,7 +71,7 @@ func HandlerGenerateTokenPair(c echo.Context) error {
 // @Failure      400  {string}  string  "Неверный запрос"
 // @Failure      500  {string}  string  "Ошибка обновления токенов"
 // @Router       /token/refresh [post]
-func HandlerRefreshTokenPair(c echo.Context) error {
+func (h *TokenHandlers) HandlerRefreshTokenPair(c echo.Context) error {
 	ip := c.RealIP()
 
 	var data struct {
@@ -75,7 +83,7 @@ func HandlerRefreshTokenPair(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
 
-	tokenPair, err := RefreshTokenPair(data.AccessToken, data.RefreshToken, ip)
+	tokenPair, err := h.TokenService.RefreshTokenPair(data.AccessToken, data.RefreshToken, ip)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Error refreshing token pair")
 	}

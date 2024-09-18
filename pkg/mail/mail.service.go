@@ -3,17 +3,19 @@ package mail
 import (
 	"fmt"
 	"net/smtp"
-	"os"
 )
 
-func SendEmail(to, subject, body string) error {
-	from := os.Getenv("MAIL_FROM")
-	password := os.Getenv("MAIL_PASSWORD")
-	host := os.Getenv("MAIL_HOST")
-	port := os.Getenv("MAIL_PORT")
-	auth := smtp.PlainAuth("", from, password, host)
+type MailService struct {
+	From     string
+	Password string
+	Host     string
+	Port     string
+}
 
-	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", from, to, subject, body)
+func (m *MailService) SendEmail(to, subject, body string) error {
+	auth := smtp.PlainAuth("", m.From, m.Password, m.Host)
 
-	return smtp.SendMail(host+":"+port, auth, from, []string{to}, []byte(msg))
+	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", m.From, to, subject, body)
+
+	return smtp.SendMail(m.Host+":"+m.Port, auth, m.From, []string{to}, []byte(msg))
 }

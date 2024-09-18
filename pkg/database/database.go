@@ -1,6 +1,7 @@
 package database
 
 import (
+	"auth-service/pkg/database/models"
 	"log"
 
 	"gorm.io/driver/postgres"
@@ -42,7 +43,7 @@ func InitMigration() {
 	if isEmpty {
 		log.Println("Database is empty, running init migration...")
 
-		err := DB.AutoMigrate(&RefreshTokenModel{})
+		err := DB.AutoMigrate(&models.RefreshTokenModel{})
 		if err != nil {
 			log.Fatalf("Failed to run migrations: %v", err)
 		}
