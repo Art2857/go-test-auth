@@ -1,17 +1,16 @@
 package token
 
 import (
+	"auth/pkg/database"
 	"auth/pkg/database/models"
 	"errors"
-
-	"gorm.io/gorm"
 )
 
 type TokenRepository struct {
-	db *gorm.DB
+	db *database.Postgres
 }
 
-func NewRepository(db *gorm.DB) *TokenRepository {
+func NewRepository(db *database.Postgres) *TokenRepository {
 	return &TokenRepository{
 		db: db,
 	}

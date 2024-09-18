@@ -3,4 +3,5 @@ build/
 *.tmp
 .env*
 !.env.example
+!.env.test
 .docs

@@ -15,18 +15,20 @@ import (
 )
 
 func main() {
-	config.Init()
+	// Config
+	config := config.Config{}
+	config.LoadEnv()
 
-	database.InitDB(config.Env.PostgresConnection)
-	defer database.CloseDB()
+	// Database
+	db := database.DB{}
 
-	e := echo.New()
+	// Postgres
+	db.OpenPostgres(config.Env.PostgresConnection)
+	defer db.ClosePostgres()
 
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	db.Postgres.InitMigration()
 
-	e.GET("/docs/*", echoSwagger.WrapHandler)
-
+	// Services
 	mailService := mail.MailService{
 		From:     config.Env.MailFrom,
 		Password: config.Env.MailPassword,
@@ -34,8 +36,16 @@ func main() {
 		Port:     config.Env.MailPort,
 	}
 
-	tokenRepository := token.NewRepository(database.DB)
-	tokenService := token.NewService(tokenRepository, &mailService)
+	tokenRepository := token.NewRepository(&db.Postgres)
+	tokenService := token.NewService(&config, tokenRepository, &mailService)
+
+	// Handlers
+	e := echo.New()
+
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	e.GET("/docs/*", echoSwagger.WrapHandler)
 
 	tokenHandlers := token.NewHanders(tokenService)
 	tokenHandlers.InitHandlers(e)

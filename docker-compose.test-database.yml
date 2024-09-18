@@ -1,0 +1,15 @@
+services:
+  postgres-test:
+    image: postgres
+    container_name: auth-postgres-test
+    environment:
+      POSTGRES_USER: mytestname
+      POSTGRES_PASSWORD: mytestpassword
+      POSTGRES_DB: mytestdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_test:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_test:

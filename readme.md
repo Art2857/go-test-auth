@@ -41,6 +41,18 @@ docker-compose -f ./docker-compose.database.yml up -d
 go run auth
 ```
 
+**Запуск тестов**
+
+Предварительная подготовка:
+```bash
+docker-compose -f ./docker-compose.test-database.yml up -d
+```
+
+Запуск e2e тестов:
+```bash
+go test ./tests
+```
+
 **Роутинг**
 
 Роут документации:
