@@ -17,7 +17,7 @@ import (
 func main() {
 	config.Init()
 
-	database.InitDB(config.Env.POSTGRES_CONNECTION)
+	database.InitDB(config.Env.PostgresConnection)
 	defer database.CloseDB()
 
 	e := echo.New()
@@ -28,10 +28,10 @@ func main() {
 	e.GET("/docs/*", echoSwagger.WrapHandler)
 
 	mailService := mail.MailService{
-		From:     config.Env.MAIL_FROM,
-		Password: config.Env.MAIL_PASSWORD,
-		Host:     config.Env.MAIL_HOST,
-		Port:     config.Env.MAIL_PORT,
+		From:     config.Env.MailFrom,
+		Password: config.Env.MailPassword,
+		Host:     config.Env.MailHost,
+		Port:     config.Env.MailPort,
 	}
 
 	tokenRepository := token.NewRepository(database.DB)

@@ -34,7 +34,7 @@ type TokenPair struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-var jwtSecret = []byte(config.Env.JWT_SECRET)
+var jwtSecret = []byte(config.Env.JWTSecret)
 
 // Структура JWT токена
 type Claims struct {
