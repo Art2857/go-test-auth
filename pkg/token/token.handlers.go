@@ -18,7 +18,7 @@ func InitHandlers(e *echo.Echo) *echo.Group {
 	return tokenGroup
 }
 
-// HandlerGenerateTokenPair генерирует пару токенов (access и refresh).
+// HandlerGenerateTokenPair генерирует пару токенов (access и refresh)
 // @Summary      Генерация пары токенов
 // @Description  Генерирует access и refresh токены для пользователя по его ID.
 // @Tags         Auth
@@ -52,9 +52,9 @@ func HandlerGenerateTokenPair(c echo.Context) error {
 	return c.JSON(http.StatusOK, tokenPair)
 }
 
-// HandlerRefreshTokenPair обновляет access и refresh токены.
+// HandlerRefreshTokenPair обновляет access и refresh токены
 // @Summary      Обновление пары токенов
-// @Description  Обновляет access и refresh токены, используя действующую refresh-токен.
+// @Description  Обновляет access и refresh токены, используя действующую refresh-токен
 // @Tags         Auth
 // @Accept       json
 // @Produce      json

@@ -1,18 +1,19 @@
 package database
 
 import (
-	"context"
 	"log"
 
-	"github.com/jackc/pgx/v4"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-var DB *pgx.Conn
+var DB *gorm.DB
 
+// InitDB инициализирует подключение к базе данных и миграцию
 func InitDB(connectString string) {
 	var err error
 
-	DB, err = pgx.Connect(context.Background(), connectString)
+	DB, err = gorm.Open(postgres.Open(connectString), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
@@ -22,9 +23,9 @@ func InitDB(connectString string) {
 	InitMigration()
 }
 
-func isDatabaseEmpty(db *pgx.Conn) (bool, error) {
-	var count int
-	err := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';").Scan(&count)
+func isDatabaseEmpty(db *gorm.DB) (bool, error) {
+	var count int64
+	err := db.Raw("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';").Scan(&count).Error
 	if err != nil {
 		return false, err
 	}
@@ -41,16 +42,9 @@ func InitMigration() {
 	if isEmpty {
 		log.Println("Database is empty, running init migration...")
 
-		// По хорошему добавить что-то вроде expires_at, но в случае redis'а это было бы проще
-		_, err := DB.Exec(context.Background(), `
-		CREATE TABLE IF NOT EXISTS refresh_tokens (
-			id SERIAL PRIMARY KEY,
-			token_hash TEXT NOT NULL,
-			ip TEXT NOT NULL,
-			created_at TIMESTAMPTZ DEFAULT NOW()
-		);`)
+		err := DB.AutoMigrate(&RefreshTokenModel{})
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Failed to run migrations: %v", err)
 		}
 
 		log.Println("Init Migration complete.")
@@ -58,7 +52,12 @@ func InitMigration() {
 }
 
 func CloseDB() {
-	err := DB.Close(context.Background())
+	db, err := DB.DB()
+	if err != nil {
+		log.Fatalf("Failed to get database object: %v", err)
+	}
+
+	err = db.Close()
 	if err != nil {
 		log.Fatalf("Error closing the database connection: %v", err)
 	}
