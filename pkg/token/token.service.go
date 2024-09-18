@@ -87,15 +87,15 @@ func (s *TokenService) VerifyAccessToken(token string, ignoreExpiration bool) (*
 	return nil, err
 }
 
-func (s *TokenService) VerifyTokenPair(accessToken, refreshToken string) (*Claims, error) {
-	claims, err := s.VerifyAccessToken(accessToken, true)
+func (s *TokenService) VerifyTokenPair(TokenPair *TokenPair) (*Claims, error) {
+	claims, err := s.VerifyAccessToken(TokenPair.AccessToken, true)
 	if err != nil {
 		log.Print(err)
 		return nil, err
 	}
 
 	// Сверяем что refresh связан с access токеном
-	err = bcrypt.CompareHashAndPassword([]byte(claims.RefreshTokenHash), []byte(refreshToken))
+	err = bcrypt.CompareHashAndPassword([]byte(claims.RefreshTokenHash), []byte(TokenPair.RefreshToken))
 	if err != nil {
 		log.Print(err)
 		return nil, err
@@ -166,14 +166,14 @@ func (s *TokenService) GenerateTokenPair(userID, ip string) (*TokenPair, error) 
 }
 
 // Функция для обновления пары Access и Refresh токенов
-func (s *TokenService) RefreshTokenPair(accessToken, refreshToken, ip string) (*TokenPair, error) {
-	claims, err := s.VerifyTokenPair(accessToken, refreshToken)
+func (s *TokenService) RefreshTokenPair(tokenPair *TokenPair, ip string) (*TokenPair, error) {
+	claims, err := s.VerifyTokenPair(tokenPair)
 	if err != nil {
 		log.Print(err)
 		return nil, err
 	}
 
-	refreshTokenHashDatabase := s.hashRefreshTokenToDatabase(refreshToken)
+	refreshTokenHashDatabase := s.hashRefreshTokenToDatabase(tokenPair.RefreshToken)
 
 	// Подбираем ip, который был при аутентификации
 	beforeIP, err := s.TokenRepository.RefreshTokenGetIP(refreshTokenHashDatabase)
@@ -200,11 +200,11 @@ func (s *TokenService) RefreshTokenPair(accessToken, refreshToken, ip string) (*
 		return nil, errors.New("refresh token not found")
 	}
 
-	tokenPair, err := s.GenerateTokenPair(claims.UserID, ip)
+	newTokenPair, err := s.GenerateTokenPair(claims.UserID, ip)
 	if err != nil {
 		log.Print(err)
 		return nil, err
 	}
 
-	return tokenPair, err
+	return newTokenPair, err
 }

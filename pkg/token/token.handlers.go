@@ -83,7 +83,7 @@ func (h *TokenHandlers) HandlerRefreshTokenPair(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
 
-	tokenPair, err := h.TokenService.RefreshTokenPair(data.AccessToken, data.RefreshToken, ip)
+	tokenPair, err := h.TokenService.RefreshTokenPair(&TokenPair{AccessToken: data.AccessToken, RefreshToken: data.RefreshToken}, ip)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Error refreshing token pair")
 	}

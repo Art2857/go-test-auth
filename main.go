@@ -6,7 +6,6 @@ import (
 	"auth-service/pkg/mail"
 	"auth-service/pkg/token"
 	"log"
-	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -29,10 +28,10 @@ func main() {
 	e.GET("/docs/*", echoSwagger.WrapHandler)
 
 	mailService := mail.MailService{
-		From:     os.Getenv("MAIL_FROM"),
-		Password: os.Getenv("MAIL_PASSWORD"),
-		Host:     os.Getenv("MAIL_HOST"),
-		Port:     os.Getenv("MAIL_PORT"),
+		From:     config.Env.MAIL_FROM,
+		Password: config.Env.MAIL_PASSWORD,
+		Host:     config.Env.MAIL_HOST,
+		Port:     config.Env.MAIL_PORT,
 	}
 
 	tokenRepository := token.NewRepository(database.DB)

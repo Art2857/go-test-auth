@@ -27,10 +27,10 @@ func getEnv(key string, message string) string {
 	return value
 }
 
-func Init() Environment {
-	err := godotenv.Load()
+func Init(filenames ...string) Environment {
+	err := godotenv.Load(filenames...)
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file", err)
 	}
 
 	Env = Environment{
