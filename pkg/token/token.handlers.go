@@ -2,7 +2,6 @@ package token
 
 import (
 	"auth/pkg/utils"
-	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -55,7 +54,7 @@ func (h *TokenHandlers) HandlerGenerateTokenPair(c echo.Context) error {
 
 	tokenPair, err := h.TokenService.GenerateTokenPair(data.UserID, ip)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "Error generating token pair")
+		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, tokenPair)
@@ -84,15 +83,10 @@ func (h *TokenHandlers) HandlerRefreshTokenPair(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid request body")
 	}
 
-	fmt.Println("HandlerRefreshTokenPair Data", data)
-
 	tokenPair, err := h.TokenService.RefreshTokenPair(&TokenPair{AccessToken: data.AccessToken, RefreshToken: data.RefreshToken}, ip)
 	if err != nil {
-		fmt.Println("HandlerRefreshTokenPair Error", err)
-		return c.JSON(http.StatusInternalServerError, "Error refreshing token pair")
+		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
-	fmt.Println("HandlerRefreshTokenPair TokenPair", tokenPair)
 
 	return c.JSON(http.StatusOK, tokenPair)
 }

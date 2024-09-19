@@ -3,7 +3,7 @@ package token
 import (
 	"auth/pkg/database"
 	"auth/pkg/database/models"
-	"errors"
+	"fmt"
 )
 
 type TokenRepository struct {
@@ -16,6 +16,15 @@ func NewRepository(db *database.Postgres) *TokenRepository {
 	}
 }
 
+// Ошибка создания Refresh Token в базе данных
+type ErrRefreshTokenCreate struct {
+	Reason string
+}
+
+func (e *ErrRefreshTokenCreate) Error() string {
+	return fmt.Sprintf("Refresh Token creation error in the database: %s", e.Reason)
+}
+
 func (repo *TokenRepository) RefreshTokenCreate(refreshTokenHash, ip string) (bool, error) {
 	refreshToken := models.RefreshTokenModel{
 		TokenHash: refreshTokenHash,
@@ -23,27 +32,45 @@ func (repo *TokenRepository) RefreshTokenCreate(refreshTokenHash, ip string) (bo
 	}
 
 	if err := repo.db.Create(&refreshToken).Error; err != nil {
-		return false, errors.New("Refresh Token Create Database error: " + err.Error())
+		return false, &ErrRefreshTokenCreate{Reason: err.Error()}
 	}
 
 	return true, nil
+}
+
+// Ошибка получения IP по Refresh Token
+type ErrRefreshTokenGetIP struct {
+	Reason string
+}
+
+func (e *ErrRefreshTokenGetIP) Error() string {
+	return fmt.Sprintf("Error retrieving IP by Refresh Token: %s", e.Reason)
 }
 
 func (repo *TokenRepository) RefreshTokenGetIP(refreshTokenHash string) (string, error) {
 	var refreshToken models.RefreshTokenModel
 
 	if err := repo.db.Where("token_hash = ?", refreshTokenHash).First(&refreshToken).Error; err != nil {
-		return "", errors.New("Refresh Token Get Database error: " + err.Error())
+		return "", &ErrRefreshTokenGetIP{Reason: err.Error()}
 	}
 
 	return refreshToken.IP, nil
+}
+
+// Ошибка удаления Refresh Token из базы данных
+type ErrRefreshTokenRemove struct {
+	Reason string
+}
+
+func (e *ErrRefreshTokenRemove) Error() string {
+	return fmt.Sprintf("Error deleting Refresh Token from the database: %s", e.Reason)
 }
 
 func (repo *TokenRepository) RefreshTokenRemove(refreshTokenHash string) (bool, error) {
 	result := repo.db.Where("token_hash = ?", refreshTokenHash).Unscoped().Delete(&models.RefreshTokenModel{})
 
 	if result.Error != nil {
-		return false, errors.New("Refresh Token Remove Database error: " + result.Error.Error())
+		return false, &ErrRefreshTokenRemove{Reason: result.Error.Error()}
 	}
 
 	if result.RowsAffected == 0 {

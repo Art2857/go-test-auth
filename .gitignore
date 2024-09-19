@@ -4,4 +4,4 @@ build/
 .env*
 !.env.example
 !.env.test
-.docs
+docs

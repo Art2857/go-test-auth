@@ -68,7 +68,7 @@ const docTemplate = `{
         },
         "/token/refresh": {
             "post": {
-                "description": "Обновляет access и refresh токены, используя действующую refresh-токен.",
+                "description": "Обновляет access и refresh токены, используя действующую refresh-токен",
                 "consumes": [
                     "application/json"
                 ],
@@ -123,7 +123,7 @@ const docTemplate = `{
     },
     "definitions": {
         "token.TokenPair": {
-            "description": "Структура для пары токенов (access и refresh).",
+            "description": "Структура для пару токенов access и refresh",
             "type": "object",
             "properties": {
                 "access_token": {

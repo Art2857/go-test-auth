@@ -1,6 +1,6 @@
 definitions:
   token.TokenPair:
-    description: Структура для пары токенов (access и refresh).
+    description: Структура для пару токенов access и refresh
     properties:
       access_token:
         type: string
@@ -47,7 +47,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Обновляет access и refresh токены, используя действующую refresh-токен.
+      description: Обновляет access и refresh токены, используя действующую refresh-токен
       parameters:
       - description: Тело запроса с токенами
         in: body
